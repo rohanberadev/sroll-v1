@@ -3,6 +3,7 @@
 // import { auth } from "@/server/auth";
 import { AppHeader } from "~/components/app-header";
 import BottomNav from "~/components/bottom-nav";
+import SideNav from "~/components/side-nav";
 
 function MainApp({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -21,7 +22,7 @@ export default async function ProtectedLayout({
       <AppHeader />
 
       {/* Desktop Nav */}
-      {/* <SideNav username={session.user.name} /> */}
+      <SideNav username={"rohan"} />
 
       {/* <main className="flex w-full flex-col items-center lg:flex-1 lg:pl-[250px] xl:pl-[325px]">
         {children}
