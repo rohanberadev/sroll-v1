@@ -8,6 +8,10 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { createdAt, id, updatedAt } from "../schemaHelper";
+import { PostCommentTable } from "./postComment";
+import { PostLikeTable } from "./postLike";
+import { PostShareTable } from "./postShare";
+import { PostViewTable } from "./postView";
 import { UserTable } from "./user";
 
 export const postVisibilty = ["public", "follower", "private"] as const;
@@ -36,9 +40,17 @@ export const PostTable = pgTable("posts", {
   updatedAt,
 });
 
-export const PostRelationship = relations(PostTable, ({ one }) => ({
+export const PostRelationship = relations(PostTable, ({ one, many }) => ({
   user: one(UserTable, {
     fields: [PostTable.userId],
     references: [UserTable.id],
   }),
+
+  likes: many(PostLikeTable),
+
+  views: many(PostViewTable),
+
+  shares: many(PostShareTable),
+
+  comments: many(PostCommentTable),
 }));

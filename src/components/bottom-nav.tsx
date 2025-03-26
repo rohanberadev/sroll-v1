@@ -1,13 +1,15 @@
 "use client";
 
-import {
-  CirclePlusIcon,
-  HomeIcon,
-  SearchIcon,
-  TelescopeIcon,
-} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { GoHome, GoHomeFill } from "react-icons/go";
+import {
+  MdAddToPhotos,
+  MdExplore,
+  MdOutlineAddToPhotos,
+  MdOutlineExplore,
+} from "react-icons/md";
+import { RiSearchFill, RiSearchLine } from "react-icons/ri";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { NavLink } from "./nav-link";
 
@@ -21,7 +23,8 @@ export default function BottomNav({ username }: { username: string }) {
           <NavLink
             linkHref="/"
             linkLabel="Home"
-            Icon={HomeIcon}
+            FillIcon={GoHomeFill}
+            OutlineIcon={GoHome}
             active={pathname === "/"}
           />
         </li>
@@ -30,7 +33,8 @@ export default function BottomNav({ username }: { username: string }) {
           <NavLink
             linkHref="/search"
             linkLabel="Search"
-            Icon={SearchIcon}
+            FillIcon={RiSearchFill}
+            OutlineIcon={RiSearchLine}
             active={pathname === "/search"}
           />
         </li>
@@ -39,7 +43,8 @@ export default function BottomNav({ username }: { username: string }) {
           <NavLink
             linkHref="/create"
             linkLabel="Create"
-            Icon={CirclePlusIcon}
+            FillIcon={MdAddToPhotos}
+            OutlineIcon={MdOutlineAddToPhotos}
             active={pathname === "/create"}
           />
         </li>
@@ -48,7 +53,8 @@ export default function BottomNav({ username }: { username: string }) {
           <NavLink
             linkHref="/explore"
             linkLabel="Explore"
-            Icon={TelescopeIcon}
+            FillIcon={MdExplore}
+            OutlineIcon={MdOutlineExplore}
             active={pathname === "/explore"}
           />
         </li>

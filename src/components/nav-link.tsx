@@ -1,28 +1,26 @@
-import { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { IconType } from "react-icons";
 
 export function NavLink({
   linkHref,
   linkLabel,
-  Icon,
+  OutlineIcon,
+  FillIcon,
   active,
 }: {
   linkHref: string;
   linkLabel: string;
-  Icon: LucideIcon;
+  OutlineIcon: IconType;
+  FillIcon: IconType;
   active?: boolean;
 }) {
   return (
     <Link href={linkHref} className="inline-block">
       <div className="flex items-center gap-x-8">
         {active ? (
-          <Icon
-            className="text-2xl leading-none"
-            fill="currentColor"
-            stroke="none"
-          />
+          <FillIcon className="text-2xl leading-none" />
         ) : (
-          <Icon className="text-2xl leading-none" />
+          <OutlineIcon className="text-2xl leading-none" />
         )}
         <span className="text-[1rem] leading-none max-lg:hidden">
           {linkLabel}

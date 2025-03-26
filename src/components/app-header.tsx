@@ -1,8 +1,9 @@
 "use client";
 
-import { HeartIcon, MessageCircleIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AiFillMessage, AiOutlineMessage } from "react-icons/ai";
+import { GoHeart, GoHeartFill } from "react-icons/go";
 import { NavLink } from "./nav-link";
 
 export function AppHeader() {
@@ -18,7 +19,8 @@ export function AppHeader() {
           <NavLink
             linkHref="/notifications"
             linkLabel="Notifications"
-            Icon={HeartIcon}
+            FillIcon={GoHeartFill}
+            OutlineIcon={GoHeart}
             active={pathname === "/notifications"}
           />
         </li>
@@ -27,7 +29,8 @@ export function AppHeader() {
           <NavLink
             linkHref="/messages"
             linkLabel="Messages"
-            Icon={MessageCircleIcon}
+            FillIcon={AiFillMessage}
+            OutlineIcon={AiOutlineMessage}
             active={pathname === "/messages"}
           />
         </li>

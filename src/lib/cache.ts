@@ -8,6 +8,7 @@ export type ValidCacheTags =
 
 export const CACHE_TAGS = {
   posts: "posts",
+  users: "users",
 } as const;
 
 export function getGlobalTag(tag: keyof typeof CACHE_TAGS) {
