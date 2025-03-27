@@ -1,6 +1,15 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export default clerkMiddleware();
+const isProtected = createRouteMatcher(["/", "/search(.*)"]);
+
+export default clerkMiddleware(async (auth, request) => {
+  if (isProtected(request)) {
+    await auth.protect();
+  }
+
+  return NextResponse.next();
+});
 
 export const config = {
   matcher: [

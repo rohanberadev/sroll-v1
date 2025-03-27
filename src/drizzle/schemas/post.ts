@@ -10,6 +10,7 @@ import {
 import { createdAt, id, updatedAt } from "../schemaHelper";
 import { PostCommentTable } from "./postComment";
 import { PostLikeTable } from "./postLike";
+import { PostSaveTable } from "./postSave";
 import { PostShareTable } from "./postShare";
 import { PostViewTable } from "./postView";
 import { UserTable } from "./user";
@@ -53,4 +54,6 @@ export const PostRelationship = relations(PostTable, ({ one, many }) => ({
   shares: many(PostShareTable),
 
   comments: many(PostCommentTable),
+
+  saves: many(PostSaveTable),
 }));

@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "~/drizzle/db";
 import { FollowTable, PostTable } from "~/drizzle/schema";
 
-export async function canSeePost({
+export async function canAccessPost({
   id,
   userId,
 }: {
