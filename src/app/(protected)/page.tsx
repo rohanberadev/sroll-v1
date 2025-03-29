@@ -1,25 +1,26 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import InfintePosts from "~/features/post/components/infinite-posts";
 import { getPostsFeed } from "~/features/post/db/posts";
+import { getCurrentUser } from "~/services/clerk";
 
 export default async function HomePage() {
-  // const { userId } = await getCurrentUser({});
-  // if (!userId) redirect("/sign-in");
-  const user = await currentUser();
-  if (!user || !user.publicMetadata.dbId) redirect("/sign-in");
+  const { userId } = await getCurrentUser({});
+  if (!userId) redirect("/sign-in");
 
   return (
-    <div className="flex w-full flex-col items-center lg:pt-6">
+    <div className="flex w-full flex-col items-center">
       <Suspense fallback={<p>Loading...</p>}>
-        <InitialPosts userId={user?.publicMetadata.dbId} />
+        <InitialPosts userId={userId} />
       </Suspense>
     </div>
   );
 }
 
 async function InitialPosts({ userId }: { userId: string }) {
-  const posts = await getPostsFeed({ userId });
+  const posts = await getPostsFeed({
+    userId,
+    pagination: { pageNumber: 1, pageSize: 10 },
+  });
   return <InfintePosts posts={posts} />;
 }

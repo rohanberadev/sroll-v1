@@ -16,17 +16,20 @@ export const PostCommentTable = pgTable(
       .references(() => PostTable.id, { onDelete: "cascade" }),
     createdAt,
   },
-  (table) => [unique("post_user").on(table.postId, table.userId)]
+  (table) => [unique("post_comment_user").on(table.postId, table.userId)]
 );
 
-export const PostLikeRelationship = relations(PostCommentTable, ({ one }) => ({
-  post: one(PostTable, {
-    fields: [PostCommentTable.postId],
-    references: [PostTable.id],
-  }),
+export const PostCommentRelationship = relations(
+  PostCommentTable,
+  ({ one }) => ({
+    post: one(PostTable, {
+      fields: [PostCommentTable.postId],
+      references: [PostTable.id],
+    }),
 
-  user: one(UserTable, {
-    fields: [PostCommentTable.userId],
-    references: [UserTable.id],
-  }),
-}));
+    user: one(UserTable, {
+      fields: [PostCommentTable.userId],
+      references: [UserTable.id],
+    }),
+  })
+);

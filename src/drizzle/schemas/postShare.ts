@@ -16,7 +16,7 @@ export const PostShareTable = pgTable(
       .references(() => UserTable.id),
     createdAt,
   },
-  (table) => [unique("post_user").on(table.postId, table.userId)]
+  (table) => [unique("post_share_user").on(table.postId, table.userId)]
 );
 
 export const PostShareRelationship = relations(PostShareTable, ({ one }) => ({

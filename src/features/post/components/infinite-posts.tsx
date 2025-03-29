@@ -9,7 +9,7 @@ export default function InfintePosts({
   posts: Awaited<ReturnType<typeof getPostsFeed>>;
 }) {
   return (
-    <div className="flex flex-col items-center lg:gap-y-12 lg:py-4">
+    <div className="flex flex-col items-center lg:gap-y-12">
       {posts.map((post, index) => (
         <ShowPost key={index} post={post} />
       ))}

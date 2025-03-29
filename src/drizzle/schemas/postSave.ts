@@ -16,7 +16,7 @@ export const PostSaveTable = pgTable(
       .references(() => UserTable.id, { onDelete: "cascade" }),
     createdAt,
   },
-  (table) => [unique("post_user").on(table.postId, table.userId)]
+  (table) => [unique("post_save_user").on(table.postId, table.userId)]
 );
 
 export const PostSaveRelationship = relations(PostSaveTable, ({ one }) => ({

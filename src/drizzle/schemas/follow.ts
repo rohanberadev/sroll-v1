@@ -16,7 +16,7 @@ export const FollowTable = pgTable(
     createdAt,
     updatedAt,
   },
-  (t) => [unique().on(t.followerUserId, t.followingUserId)]
+  (t) => [unique("follower_following").on(t.followerUserId, t.followingUserId)]
 );
 
 export const FollowRelationship = relations(FollowTable, ({ one }) => ({

@@ -20,7 +20,11 @@ export async function canAccessPost({
   if (!post) return false;
 
   if (post.visibilty === "public") return true;
-  if (post.visibilty === "private" && post.userId === userId) return true;
+  if (
+    (post.visibilty === "private" || post.visibilty === "follower") &&
+    post.userId === userId
+  )
+    return true;
   if (post.visibilty === "follower") {
     const isFollowingUser = await db.query.FollowTable.findFirst({
       where: and(

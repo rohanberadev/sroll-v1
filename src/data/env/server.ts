@@ -7,6 +7,9 @@ export const env = createEnv({
 
     // Clerk
     CLERK_WEBHOOK_SECRET: z.string().min(1),
+
+    // Imagekit
+    IMAGEKIT_PRIVATE_KEY: z.string().min(1),
   },
 
   experimental__runtimeEnv: process.env,

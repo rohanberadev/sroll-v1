@@ -4,6 +4,7 @@ import { createdAt, id, updatedAt } from "../schemaHelper";
 import { FollowTable } from "./follow";
 import { MessageTable } from "./message";
 import { PostTable } from "./post";
+import { PostDraftTable } from "./postDraft";
 import { PostSaveTable } from "./postSave";
 
 export const userRole = ["user", "admin"] as const;
@@ -45,4 +46,6 @@ export const UserRelationship = relations(UserTable, ({ many }) => ({
   messages: many(MessageTable),
 
   savePosts: many(PostSaveTable),
+
+  postDrafts: many(PostDraftTable),
 }));

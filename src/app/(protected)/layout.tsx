@@ -5,14 +5,6 @@ import { AppHeader } from "~/components/app-header";
 import BottomNav from "~/components/bottom-nav";
 import SideNav from "~/components/side-nav";
 
-function MainApp({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <main className="flex w-full flex-col items-center lg:flex-1 lg:pl-[250px] xl:pl-[325px]">
-      {children}
-    </main>
-  );
-}
-
 export default async function ProtectedLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -28,7 +20,9 @@ export default async function ProtectedLayout({
         {children}
       </main> */}
 
-      <MainApp>{children}</MainApp>
+      <main className="flex w-full flex-col items-center lg:flex-1 lg:pl-[250px] xl:pl-[325px]">
+        <div className="px-12 py-16 w-full h-full">{children}</div>
+      </main>
 
       {/* Mobile Nav */}
       <BottomNav username={"rohan"} />

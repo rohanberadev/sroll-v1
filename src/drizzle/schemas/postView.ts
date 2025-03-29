@@ -16,7 +16,7 @@ export const PostViewTable = pgTable(
       .references(() => UserTable.id, { onDelete: "cascade" }),
     createdAt,
   },
-  (table) => [unique("post_user").on(table.postId, table.userId)]
+  (table) => [unique("post_view_user").on(table.postId, table.userId)]
 );
 
 export const PostViewRelationship = relations(PostViewTable, ({ one }) => ({

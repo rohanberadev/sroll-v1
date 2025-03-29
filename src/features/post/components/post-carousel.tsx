@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { IKImage } from "imagekitio-next";
 import { useEffect, useState } from "react";
 import { AspectRatio } from "~/components/ui/aspect-ratio";
 import {
@@ -9,6 +9,7 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "~/components/ui/carousel";
+import { env } from "~/data/env/client";
 import { cn } from "~/lib/utils";
 
 export function PostCarousel({ imageUrls }: { imageUrls: string[] }) {
@@ -38,7 +39,12 @@ export function PostCarousel({ imageUrls }: { imageUrls: string[] }) {
             className="relative select-none pl-[1px] pr-[1px]"
           >
             <AspectRatio ratio={5 / 6}>
-              <Image src={imageUrl} alt="image" fill />
+              <IKImage
+                urlEndpoint={env.NEXT_PUBLIC__IMAGEKIT_URL_ENDPOINT}
+                src={imageUrl}
+                fill
+                alt="image"
+              />
             </AspectRatio>
           </CarouselItem>
         ))}

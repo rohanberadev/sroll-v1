@@ -16,7 +16,7 @@ export const PostLikeTable = pgTable(
       .references(() => PostTable.id, { onDelete: "cascade" }),
     createdAt,
   },
-  (table) => [unique("post_user").on(table.postId, table.userId)]
+  (table) => [unique("post_like_user").on(table.postId, table.userId)]
 );
 
 export const PostLikeRelationship = relations(PostLikeTable, ({ one }) => ({
