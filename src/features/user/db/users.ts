@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "~/drizzle/db";
 import { UserTable } from "~/drizzle/schema";
 import { CACHE_TAGS, revalidateDbCache } from "~/lib/cache";
@@ -35,3 +35,47 @@ export async function updateUser(
 }
 
 export async function deleteUser({ clerkUserId }: { clerkUserId: string }) {}
+
+export async function updateUserOnFollow({
+  followerUserId,
+  followingUserId,
+}: {
+  followerUserId: string;
+  followingUserId: string;
+}) {
+  await Promise.all([
+    db
+      .update(UserTable)
+      .set({ followerCount: sql`${UserTable.followerCount} + 1` })
+      .where(eq(UserTable.id, followingUserId)),
+    db
+      .update(UserTable)
+      .set({ followerCount: sql`${UserTable.followingCount} + 1` })
+      .where(eq(UserTable.id, followerUserId)),
+  ]);
+
+  revalidateDbCache({ tag: CACHE_TAGS.users, id: followerUserId });
+  revalidateDbCache({ tag: CACHE_TAGS.users, id: followingUserId });
+}
+
+export async function updateUserOnUnfollow({
+  followerUserId,
+  followingUserId,
+}: {
+  followerUserId: string;
+  followingUserId: string;
+}) {
+  await Promise.all([
+    db
+      .update(UserTable)
+      .set({ followerCount: sql`${UserTable.followerCount} - 1` })
+      .where(eq(UserTable.id, followerUserId)),
+    db
+      .update(UserTable)
+      .set({ followerCount: sql`${UserTable.followingCount} - 1` })
+      .where(eq(UserTable.id, followerUserId)),
+  ]);
+
+  revalidateDbCache({ tag: CACHE_TAGS.users, id: followerUserId });
+  revalidateDbCache({ tag: CACHE_TAGS.users, id: followingUserId });
+}

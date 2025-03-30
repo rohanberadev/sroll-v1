@@ -9,7 +9,12 @@ import {
   sql,
 } from "drizzle-orm";
 import { db } from "~/drizzle/db";
-import { FollowTable, PostTable } from "~/drizzle/schema";
+import {
+  FollowTable,
+  PostLikeTable,
+  PostTable,
+  UserTable,
+} from "~/drizzle/schema";
 import {
   CACHE_TAGS,
   dbCache,
@@ -97,6 +102,13 @@ function getPostsFeedInternal({
         sql<boolean>`CASE WHEN ${FollowTable.id} IS NOT NULL THEN TRUE ELSE FALSE END`.as(
           "is_followed_by_user"
         ),
+      isLikedByUser:
+        sql<boolean>`CASE WHEN ${PostLikeTable.id} IS NOT NULL THEN TRUE ELSE FALSE END`.as(
+          "is_liked_by_user"
+        ),
+      user: {
+        username: UserTable.username,
+      },
     })
     .from(PostTable)
     .leftJoin(
@@ -106,6 +118,14 @@ function getPostsFeedInternal({
         eq(FollowTable.followingUserId, PostTable.userId)
       )
     )
+    .leftJoin(
+      PostLikeTable,
+      and(
+        eq(PostLikeTable.userId, userId),
+        eq(PostLikeTable.postId, PostTable.id)
+      )
+    )
+    .leftJoin(UserTable, and(eq(UserTable.id, PostTable.userId)))
     .where(
       or(
         eq(PostTable.visibilty, "public"),
@@ -132,84 +152,28 @@ function getPostsFeedInternal({
     .offset((pagination.pageNumber - 1) * pagination.pageSize);
 }
 
-// db.query.PostTable.findMany({
-//   where: or(
-//     eq(PostTable.visibilty, "public"),
-//     not(eq(PostTable.visibilty, "private")),
-//     and(
-//       eq(PostTable.visibilty, "follower"),
-//       exists(
-//         db
-//           .select()
-//           .from(FollowTable)
-//           .where(
-//             and(
-//               eq(FollowTable.followerUserId, userId),
-//               eq(FollowTable.followingUserId, sql`${PostTable}.user_id`)
-//             )
-//           )
-//           .limit(1)
-//       )
-//     )
-//   ),
+export async function updatePostOnLike({ id }: { id: string }) {
+  const { rowCount } = await db
+    .update(PostTable)
+    .set({ likeCount: sql`${PostTable.likeCount} + 1` })
+    .where(eq(PostTable.id, id));
 
-//   limit: pagination?.pageSize,
+  if (rowCount > 0) {
+    revalidateDbCache({ tag: CACHE_TAGS.posts, id });
+  }
 
-//   offset: (pagination?.pageNumber - 1) * pagination.pageSize,
+  return rowCount > 0;
+}
 
-//   orderBy: asc(PostTable.createdAt),
+export async function updatePostOnUnlike({ id }: { id: string }) {
+  const { rowCount } = await db
+    .update(PostTable)
+    .set({ likeCount: sql`${PostTable.likeCount} - 1` })
+    .where(eq(PostTable.id, id));
 
-//   extras: {
-//     likedByUser: exists(
-//       db
-//         .select()
-//         .from(PostLikeTable)
-//         .where(
-//           and(
-//             eq(PostLikeTable.userId, userId),
-//             eq(PostLikeTable.postId, PostTable.id)
-//           )
-//         )
-//         .limit(1)
-//     ).as("liked_by_user"),
+  if (rowCount > 0) {
+    revalidateDbCache({ tag: CACHE_TAGS.posts, id });
+  }
 
-//     followedByUser: exists(
-//       db
-//         .select()
-//         .from(FollowTable)
-//         .where(
-//           and(
-//             eq(FollowTable.followerUserId, userId),
-//             eq(FollowTable.followingUserId, PostTable.userId)
-//           )
-//         )
-//         .limit(1)
-//     ).as("followed_by_user"),
-
-//     savedByUser: exists(
-//       db
-//         .select()
-//         .from(PostSaveTable)
-//         .where(
-//           and(
-//             eq(PostSaveTable.postId, PostTable.id),
-//             eq(PostSaveTable.userId, userId)
-//           )
-//         )
-//         .limit(1)
-//     ).as("saved_by_user"),
-
-//     viewedByUser: exists(
-//       db
-//         .select()
-//         .from(PostViewTable)
-//         .where(
-//           and(
-//             eq(PostViewTable.postId, PostTable.id),
-//             eq(PostViewTable.userId, userId)
-//           )
-//         )
-//         .limit(1)
-//     ).as("viewed_by_user"),
-//   },
-// });
+  return rowCount > 0;
+}

@@ -1,15 +1,16 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "~/drizzle/db";
-import { PostLikeTable, PostTable } from "~/drizzle/schema";
+import { PostLikeTable } from "~/drizzle/schema";
+import { getCurrentUser } from "~/services/clerk";
 import { deletePostLike, insertPostLike } from "../db/like";
+import { updatePostOnLike, updatePostOnUnlike } from "../db/posts";
 import { canAccessPost } from "../permissions/posts";
 
 export async function togglePostLike(unsafeData: { postId: string }) {
-  const { userId } = await auth();
+  const { userId } = await getCurrentUser({});
   if (!userId) redirect("/sign-in");
 
   const data = unsafeData;
@@ -39,18 +40,12 @@ export async function togglePostLike(unsafeData: { postId: string }) {
 
   // like the post
   if (!existingPostLike) {
-    await db
-      .update(PostTable)
-      .set({ likeCount: sql`${PostTable.likeCount} + 1` })
-      .where(eq(PostTable.id, data.postId));
+    await updatePostOnLike({ id: data.postId });
 
     try {
       await insertPostLike({ postId: data.postId, userId });
     } catch (e) {
-      await db
-        .update(PostTable)
-        .set({ likeCount: sql`${PostTable.likeCount} - 1` })
-        .where(eq(PostTable.id, data.postId));
+      await updatePostOnUnlike({ id: data.postId });
 
       return {
         error: true,
@@ -61,22 +56,17 @@ export async function togglePostLike(unsafeData: { postId: string }) {
     return {
       error: false,
       message: "Successfully like the post",
+      like: true,
     };
   }
   // unlike the post
   else {
-    await db
-      .update(PostTable)
-      .set({ likeCount: sql`${PostTable.likeCount} - 1` })
-      .where(eq(PostTable.id, data.postId));
+    await updatePostOnUnlike({ id: data.postId });
 
     try {
       await deletePostLike({ postId: data.postId, userId });
     } catch (e) {
-      await db
-        .update(PostTable)
-        .set({ likeCount: sql`${PostTable.likeCount} + 1` })
-        .where(eq(PostTable.id, data.postId));
+      await updatePostOnLike({ id: data.postId });
 
       return {
         error: true,
@@ -87,6 +77,7 @@ export async function togglePostLike(unsafeData: { postId: string }) {
     return {
       error: false,
       message: "Successfully unlike the post",
+      like: false,
     };
   }
 }
