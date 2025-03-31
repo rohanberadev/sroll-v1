@@ -147,7 +147,7 @@ export function CreatePostForm() {
           value={postVisibiltyValue}
           onValueChange={async (value) => {
             setPostVisibilityValue(value as PostVisibilty);
-            await savePostDraft({ visibility: value as PostVisibilty });
+            await handleSavePostDraft({ visibility: value as PostVisibilty });
           }}
         >
           <SelectTrigger className="mt-1 w-[180px] border-gray-600">

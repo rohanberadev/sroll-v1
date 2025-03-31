@@ -57,6 +57,7 @@ export function getCommentsInternal({
       ...getTableColumns(PostCommentTable),
       user: {
         username: UserTable.username,
+        imageUrl: UserTable.imageUrl,
       },
       isCommentedByUser: sql<boolean>`CASE WHEN ${PostCommentTable.userId} = ${userId} THEN TRUE ELSE FALSE END`,
       isLikedByUser: sql<boolean>`CASE WHEN ${CommentLikeTable.id} IS NOT NULL THEN TRUE ELSE FALSE END`,

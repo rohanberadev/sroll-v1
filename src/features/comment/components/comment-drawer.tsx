@@ -18,7 +18,7 @@ import { FaRegComment } from "react-icons/fa";
 
 import { useEffect, useState } from "react";
 import { PostVisibilty } from "~/drizzle/schema";
-import { getComments } from "../actions/comments";
+import { createComment, getComments } from "../actions/comments";
 import { getComments as getCommentsDb } from "../db/comments";
 import { CommentCard } from "./comment-card";
 // import { ClipLoader } from "react-spinners";
@@ -87,16 +87,7 @@ export function CommentDrawer({
               </div>
             ) : (
               comments.map((comment) => (
-                <CommentCard
-                  key={comment.id}
-                  comment={comment.comment}
-                  commentedBy={comment.user?.username!}
-                  commentedById={comment.userId}
-                  commentId={comment.id}
-                  isLikedByUser={comment.isLikedByUser}
-                  initialLikeCount={comment.likeCount}
-                  isCommentedByUser={comment.isCommentedByUser}
-                />
+                <CommentCard key={comment.id} comment={comment} />
               ))
             )}
           </div>
@@ -110,7 +101,10 @@ export function CommentDrawer({
           />
           <Button
             className="flex h-16 w-16 items-center justify-center bg-blue-600"
-            onClick={async () => {}}
+            onClick={async () => {
+              await createComment({ comment: commentValue, postId: postId });
+              setCommentValue("");
+            }}
             // disabled={}
           >
             <SendHorizontal size={48} color="white" />

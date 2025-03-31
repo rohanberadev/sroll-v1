@@ -44,5 +44,5 @@ function getUser(id: string) {
 }
 
 function getUserInternal({ id }: { id: string }) {
-  return db.query.UserTable.findFirst({ where: eq(UserTable.id, id) });
+  return db.query.UserTable.findFirst({ where: eq(UserTable.clerkUserId, id) });
 }

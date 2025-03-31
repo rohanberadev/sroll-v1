@@ -45,21 +45,26 @@ export async function updatePost(
   { id }: { id: string },
   data: Partial<typeof PostTable.$inferSelect>
 ) {
-  const updatedPost = await db.update(PostTable).set(data);
+  const [updatedPost] = await db
+    .update(PostTable)
+    .set(data)
+    .returning({ id: PostTable.id });
 
-  if (updatedPost.rowCount > 0) {
+  if (!updatedPost) throw new Error("Failed to update post");
+
+  if (updatedPost) {
     revalidateDbCache({ tag: CACHE_TAGS.posts, id });
   }
 
-  return updatedPost.rowCount > 0;
+  return updatedPost;
 }
 
-export function getPost({ id }: { id: string }) {
+export function getPost({ id, userId }: { id: string; userId: string }) {
   const cacheFn = dbCache(getPostInternal, {
     tags: [getIdTag(id, CACHE_TAGS.posts)],
   });
 
-  return cacheFn({ id });
+  return cacheFn({ id, userId });
 }
 
 export async function getPostsFeed({
@@ -84,8 +89,137 @@ export async function getPostsFeed({
   });
 }
 
-function getPostInternal({ id }: { id: string }) {
-  return db.query.PostTable.findFirst({ where: eq(PostTable.id, id) });
+function getPostInternal({ id, userId }: { id: string; userId: string }) {
+  return db
+    .select({
+      ...getTableColumns(PostTable),
+      isFollowedByUser:
+        sql<boolean>`CASE WHEN ${FollowTable.id} IS NOT NULL THEN TRUE ELSE FALSE END`.as(
+          "is_followed_by_user"
+        ),
+      isLikedByUser:
+        sql<boolean>`CASE WHEN ${PostLikeTable.id} IS NOT NULL THEN TRUE ELSE FALSE END`.as(
+          "is_liked_by_user"
+        ),
+      user: {
+        username: UserTable.username,
+        imageUrl: UserTable.imageUrl,
+      },
+    })
+    .from(PostTable)
+    .leftJoin(
+      FollowTable,
+      and(
+        eq(FollowTable.followerUserId, userId),
+        eq(FollowTable.followingUserId, PostTable.userId)
+      )
+    )
+    .leftJoin(
+      PostLikeTable,
+      and(
+        eq(PostLikeTable.userId, userId),
+        eq(PostLikeTable.postId, PostTable.id)
+      )
+    )
+    .leftJoin(UserTable, and(eq(UserTable.id, PostTable.userId)))
+    .where(eq(PostTable.id, id))
+    .orderBy(asc(PostTable.createdAt))
+    .limit(1);
+}
+
+export async function updatePostOnLike({ id }: { id: string }) {
+  const [updatedPost] = await db
+    .update(PostTable)
+    .set({ likeCount: sql`${PostTable.likeCount} + 1` })
+    .where(eq(PostTable.id, id))
+    .returning({ id: PostTable.id });
+
+  if (!updatedPost) throw new Error("Failed to update post");
+
+  revalidateDbCache({ tag: CACHE_TAGS.posts, id: updatedPost.id });
+
+  return updatedPost;
+}
+
+export async function updatePostOnUnlike({ id }: { id: string }) {
+  const [updatedPost] = await db
+    .update(PostTable)
+    .set({ likeCount: sql`${PostTable.likeCount} - 1` })
+    .where(eq(PostTable.id, id))
+    .returning({ id: PostTable.id });
+
+  if (!updatedPost) throw new Error("Failed to update post");
+
+  revalidateDbCache({ tag: CACHE_TAGS.posts, id: updatedPost.id });
+
+  return updatedPost;
+}
+
+export async function updatePostOnCreateComment({ id }: { id: string }) {
+  const [updatedPost] = await db
+    .update(PostTable)
+    .set({ commentCount: sql`${PostTable.commentCount} + 1` })
+    .where(eq(PostTable.id, id))
+    .returning({ id: PostTable.id });
+
+  if (!updatedPost) throw new Error("Failed to update post");
+
+  revalidateDbCache({ tag: CACHE_TAGS.posts, id: updatedPost.id });
+
+  return updatedPost;
+}
+
+export async function updatePostOnDeleteComment({ id }: { id: string }) {
+  const [updatedPost] = await db
+    .update(PostTable)
+    .set({ commentCount: sql`${PostTable.commentCount} - 1` })
+    .where(eq(PostTable.id, id))
+    .returning({ id: PostTable.id });
+
+  if (!updatedPost) throw new Error("Failed to update post");
+
+  revalidateDbCache({ tag: CACHE_TAGS.posts, id: updatedPost.id });
+
+  return updatedPost;
+}
+
+export async function getPublicPostsofUser({ userId }: { userId: string }) {
+  const cacheFn = dbCache(getPublicPostsofUserInternal, {
+    tags: [
+      getGlobalTag(CACHE_TAGS.posts),
+      getUserTag(userId, CACHE_TAGS.posts),
+    ],
+  });
+
+  return cacheFn({ userId });
+}
+
+async function getAllowedPostsOfUserInternal({ userId }: { userId: string }) {
+  return db
+    .select()
+    .from(PostTable)
+    .where(
+      and(
+        or(
+          eq(PostTable.visibilty, "public"),
+          eq(PostTable.visibilty, "follower")
+        ),
+        eq(PostTable.userId, userId)
+      )
+    )
+    .orderBy(asc(PostTable.createdAt));
+}
+
+function getPublicPostsofUserInternal({ userId }: { userId: string }) {
+  return db
+    .select({
+      ...getTableColumns(PostTable),
+    })
+    .from(PostTable)
+    .where(and(eq(PostTable.visibilty, "public"), eq(PostTable.userId, userId)))
+    .orderBy(asc(PostTable.createdAt));
+  // .limit(pagination.pageSize)
+  // .offset((pagination.pageNumber - 1) * pagination.pageSize);
 }
 
 function getPostsFeedInternal({
@@ -108,6 +242,7 @@ function getPostsFeedInternal({
         ),
       user: {
         username: UserTable.username,
+        imageUrl: UserTable.imageUrl,
       },
     })
     .from(PostTable)
@@ -127,79 +262,30 @@ function getPostsFeedInternal({
     )
     .leftJoin(UserTable, and(eq(UserTable.id, PostTable.userId)))
     .where(
-      or(
-        eq(PostTable.visibilty, "public"),
-        not(eq(PostTable.visibilty, "private")),
-        and(
-          eq(PostTable.visibilty, "follower"),
-          exists(
-            db
-              .select()
-              .from(FollowTable)
-              .where(
-                and(
-                  eq(FollowTable.followerUserId, userId),
-                  eq(FollowTable.followingUserId, PostTable.userId)
+      and(
+        or(
+          eq(PostTable.visibilty, "public"),
+          not(eq(PostTable.visibilty, "private")),
+          and(
+            eq(PostTable.visibilty, "follower"),
+            exists(
+              db
+                .select()
+                .from(FollowTable)
+                .where(
+                  and(
+                    eq(FollowTable.followerUserId, userId),
+                    eq(FollowTable.followingUserId, PostTable.userId)
+                  )
                 )
-              )
-              .limit(1)
+                .limit(1)
+            )
           )
-        )
+        ),
+        not(eq(PostTable.userId, userId))
       )
     )
     .orderBy(asc(PostTable.createdAt))
     .limit(pagination.pageSize)
     .offset((pagination.pageNumber - 1) * pagination.pageSize);
-}
-
-export async function updatePostOnLike({ id }: { id: string }) {
-  const { rowCount } = await db
-    .update(PostTable)
-    .set({ likeCount: sql`${PostTable.likeCount} + 1` })
-    .where(eq(PostTable.id, id));
-
-  if (rowCount > 0) {
-    revalidateDbCache({ tag: CACHE_TAGS.posts, id });
-  }
-
-  return rowCount > 0;
-}
-
-export async function updatePostOnUnlike({ id }: { id: string }) {
-  const { rowCount } = await db
-    .update(PostTable)
-    .set({ likeCount: sql`${PostTable.likeCount} - 1` })
-    .where(eq(PostTable.id, id));
-
-  if (rowCount > 0) {
-    revalidateDbCache({ tag: CACHE_TAGS.posts, id });
-  }
-
-  return rowCount > 0;
-}
-
-export async function updatePostOnCreateComment({ id }: { id: string }) {
-  const { rowCount } = await db
-    .update(PostTable)
-    .set({ commentCount: sql`${PostTable.commentCount} + 1` })
-    .where(eq(PostTable.id, id));
-
-  if (rowCount > 0) {
-    revalidateDbCache({ tag: CACHE_TAGS.posts, id });
-  }
-
-  return rowCount > 0;
-}
-
-export async function updatePostOnDeleteComment({ id }: { id: string }) {
-  const { rowCount } = await db
-    .update(PostTable)
-    .set({ commentCount: sql`${PostTable.commentCount} - 1` })
-    .where(eq(PostTable.id, id));
-
-  if (rowCount > 0) {
-    revalidateDbCache({ tag: CACHE_TAGS.posts, id });
-  }
-
-  return rowCount > 0;
 }

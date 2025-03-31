@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["images.unsplash.com", "ik.imagekit.io"],
   },
+  experimental: {},
 };
 
 export default nextConfig;

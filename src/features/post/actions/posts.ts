@@ -1,10 +1,17 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { db } from "~/drizzle/db";
+import { UserTable } from "~/drizzle/schema";
 import { getCurrentUser } from "~/services/clerk";
 import { deletePostDraft, upsertPostDraft } from "../db/postDrafts";
-import { getPost as getPostDb, insertPost } from "../db/posts";
+import {
+  getPost as getPostDb,
+  getPublicPostsofUser as getPublicPostsofUserDb,
+  insertPost,
+} from "../db/posts";
 import { canAccessPost } from "../permissions/posts";
 
 export async function getPost(unsafeData: { id: string }) {
@@ -79,4 +86,25 @@ export async function createPostFromDraft(unsafeData: { postDraftId: string }) {
       message: errorMesssage,
     };
   }
+}
+
+export async function getPublicPostsOfUser({ userId }: { userId: string }) {
+  const { userId: currentUserId } = await getCurrentUser({});
+  if (!currentUserId) redirect("/sign-in");
+
+  const foundUser = await db.query.UserTable.findFirst({
+    where: eq(UserTable.id, userId),
+    columns: { id: true },
+  });
+
+  if (!foundUser) {
+    return {
+      error: true,
+      message: "User not found",
+    };
+  }
+
+  const posts = await getPublicPostsofUserDb({ userId });
+
+  return { error: false, data: posts };
 }

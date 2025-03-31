@@ -23,7 +23,7 @@ export function UserAvatar({
   return (
     <AvatarLib className={avatarContainerStyles}>
       <AvatarImage
-        src="https://github.com/shadcn.png"
+        src={avatarImageUrl}
         className={cn(
           "block select-none",
           active ? "border-[2px]" : "",

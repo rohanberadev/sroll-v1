@@ -22,12 +22,12 @@ export function ShowPost({
     <Card className="flex w-[350px] flex-col rounded-sm border-gray-600 bg-black text-stone-400 max-xs:rounded-none max-xs:border-l-0 max-xs:border-r-0 max-xs:border-t-0 md:w-[375px] lg:w-[400px] lg:border-[1px] min-h-[500px] max-h-none">
       <CardHeader className="flex w-full flex-row items-center justify-between border-b-[1px] border-gray-400 pb-4">
         <div className="flex items-center gap-x-4">
-          <Link href={`/profile/`}>
-            <UserAvatar />
+          <Link href={`/profile/${post.user?.username}`}>
+            <UserAvatar avatarImageUrl={post.user?.imageUrl!} />
           </Link>
           <CardTitle className="flex items-center gap-x-4">
             <Link
-              href={`/profile/`}
+              href={`/profile/${post.user?.username}`}
               className="transition-all duration-300 hover:underline"
             >
               {post.user?.username}

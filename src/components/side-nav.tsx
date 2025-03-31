@@ -14,7 +14,13 @@ import { RiSearchFill, RiSearchLine } from "react-icons/ri";
 import { UserAvatar } from "~/features/user/components/user-avatar";
 import { NavLink } from "./nav-link";
 
-export default function SideNav({ username }: { username: string }) {
+export default function SideNav({
+  username,
+  imageUrl,
+}: {
+  username: string;
+  imageUrl: string;
+}) {
   const pathname = usePathname();
 
   return (
@@ -93,6 +99,7 @@ export default function SideNav({ username }: { username: string }) {
                 pathname.split("/").includes("profile") &&
                 pathname.split("/").includes(username)
               }
+              avatarImageUrl={imageUrl}
             />
           </Link>
         </li>
