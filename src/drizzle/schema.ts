@@ -1,3 +1,5 @@
+export * from "./enums/posts";
+export * from "./schemas/commentLike";
 export * from "./schemas/follow";
 export * from "./schemas/message";
 export * from "./schemas/post";

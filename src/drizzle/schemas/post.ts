@@ -1,12 +1,6 @@
 import { relations, sql } from "drizzle-orm";
-import {
-  bigint,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { bigint, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { postVisibiltyEnum } from "../enums/posts";
 import { createdAt, id, updatedAt } from "../schemaHelper";
 import { PostCommentTable } from "./postComment";
 import { PostLikeTable } from "./postLike";
@@ -14,10 +8,6 @@ import { PostSaveTable } from "./postSave";
 import { PostShareTable } from "./postShare";
 import { PostViewTable } from "./postView";
 import { UserTable } from "./user";
-
-export const postVisibilty = ["public", "follower", "private"] as const;
-export type PostVisibilty = (typeof postVisibilty)[number];
-export const postVisibiltyEnum = pgEnum("post_visibility", postVisibilty);
 
 export const PostTable = pgTable("posts", {
   id,

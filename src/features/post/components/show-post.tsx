@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import { CommentDrawer } from "~/features/comment/components/comment-drawer";
 import { FollowButton } from "~/features/follow/components/follow-button";
 import { UserAvatar } from "~/features/user/components/user-avatar";
 import { getPostsFeed } from "../db/posts";
@@ -18,7 +19,7 @@ export function ShowPost({
   post: Awaited<ReturnType<typeof getPostsFeed>>[number];
 }) {
   return (
-    <Card className="flex w-[350px] flex-col rounded-sm border-gray-600 bg-black text-stone-400 max-xs:rounded-none max-xs:border-l-0 max-xs:border-r-0 max-xs:border-t-0 md:w-[375px] lg:w-[400px] lg:border-[1px]">
+    <Card className="flex w-[350px] flex-col rounded-sm border-gray-600 bg-black text-stone-400 max-xs:rounded-none max-xs:border-l-0 max-xs:border-r-0 max-xs:border-t-0 md:w-[375px] lg:w-[400px] lg:border-[1px] min-h-[500px] max-h-none">
       <CardHeader className="flex w-full flex-row items-center justify-between border-b-[1px] border-gray-400 pb-4">
         <div className="flex items-center gap-x-4">
           <Link href={`/profile/`}>
@@ -42,7 +43,7 @@ export function ShowPost({
           isPostOwner={post.isPostOwner}
         /> */}
       </CardHeader>
-      <CardContent className="w-full h-full p-0">
+      <CardContent className="p-0 flex-1">
         {post.imageUrls && <PostCarousel imageUrls={post.imageUrls} />}
       </CardContent>
       <CardFooter className="flex flex-1 flex-col gap-y-6 border-t-[1px] border-gray-400 pt-4">
@@ -55,13 +56,13 @@ export function ShowPost({
               initialLikeCount={post.likeCount}
               postId={post.id}
             />
-            {/* <CommentButton
+            <CommentDrawer
               className="h-5 w-5"
-              initialCommentCount={post.comments}
-              username={post.postedBy.name}
+              initialCommentCount={post.commentCount}
+              username={post.user?.username!}
               postId={post.id}
-              postType={post.type}
-            /> */}
+              postVisibilty={post.visibilty}
+            />
             {/* <ShareButton className="h-5 w-5" shareCount={post.shares} /> */}
           </div>
           {/* <SaveButton isSavedByUser={post.isSavedByUser} postId={post.id} /> */}

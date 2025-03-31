@@ -1,15 +1,12 @@
 "use client";
 
-import { IKImage } from "imagekitio-next";
 import { useEffect, useState } from "react";
-import { AspectRatio } from "~/components/ui/aspect-ratio";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from "~/components/ui/carousel";
-import { env } from "~/data/env/client";
 import { cn } from "~/lib/utils";
 
 export function PostCarousel({ imageUrls }: { imageUrls: string[] }) {
@@ -31,21 +28,21 @@ export function PostCarousel({ imageUrls }: { imageUrls: string[] }) {
   }, [api]);
 
   return (
-    <Carousel className="relative" setApi={setApi}>
-      <CarouselContent className="-ml-0">
+    <Carousel className="relative w-full h-full" setApi={setApi}>
+      <CarouselContent className="-ml-0 w-full h-full flex items-center">
         {imageUrls.map((imageUrl, index) => (
           <CarouselItem
             key={index}
-            className="relative select-none pl-[1px] pr-[1px]"
+            className="relative select-none pl-[1px] pr-[1px] w-full h-full"
           >
-            <AspectRatio ratio={5 / 6}>
-              <IKImage
-                urlEndpoint={env.NEXT_PUBLIC__IMAGEKIT_URL_ENDPOINT}
+            <div className="w-full h-full flex justify-center items-center">
+              <img
                 src={imageUrl}
-                fill
+                loading="lazy"
                 alt="image"
+                className="w-full h-full object-cover"
               />
-            </AspectRatio>
+            </div>
           </CarouselItem>
         ))}
       </CarouselContent>

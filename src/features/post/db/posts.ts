@@ -177,3 +177,29 @@ export async function updatePostOnUnlike({ id }: { id: string }) {
 
   return rowCount > 0;
 }
+
+export async function updatePostOnCreateComment({ id }: { id: string }) {
+  const { rowCount } = await db
+    .update(PostTable)
+    .set({ commentCount: sql`${PostTable.commentCount} + 1` })
+    .where(eq(PostTable.id, id));
+
+  if (rowCount > 0) {
+    revalidateDbCache({ tag: CACHE_TAGS.posts, id });
+  }
+
+  return rowCount > 0;
+}
+
+export async function updatePostOnDeleteComment({ id }: { id: string }) {
+  const { rowCount } = await db
+    .update(PostTable)
+    .set({ commentCount: sql`${PostTable.commentCount} - 1` })
+    .where(eq(PostTable.id, id));
+
+  if (rowCount > 0) {
+    revalidateDbCache({ tag: CACHE_TAGS.posts, id });
+  }
+
+  return rowCount > 0;
+}

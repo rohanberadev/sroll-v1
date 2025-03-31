@@ -1,27 +1,26 @@
 import { relations } from "drizzle-orm";
-import { pgTable, unique, uuid } from "drizzle-orm/pg-core";
+import { bigint, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { createdAt, id } from "../schemaHelper";
+import { CommentLikeTable } from "./commentLike";
 import { PostTable } from "./post";
 import { UserTable } from "./user";
 
-export const PostCommentTable = pgTable(
-  "post_comments",
-  {
-    id,
-    userId: uuid()
-      .notNull()
-      .references(() => UserTable.id, { onDelete: "cascade" }),
-    postId: uuid()
-      .notNull()
-      .references(() => PostTable.id, { onDelete: "cascade" }),
-    createdAt,
-  },
-  (table) => [unique("post_comment_user").on(table.postId, table.userId)]
-);
+export const PostCommentTable = pgTable("post_comments", {
+  id,
+  userId: uuid()
+    .notNull()
+    .references(() => UserTable.id, { onDelete: "cascade" }),
+  comment: text().notNull(),
+  likeCount: bigint("like_count", { mode: "number" }).notNull().default(0),
+  postId: uuid()
+    .notNull()
+    .references(() => PostTable.id, { onDelete: "cascade" }),
+  createdAt,
+});
 
 export const PostCommentRelationship = relations(
   PostCommentTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     post: one(PostTable, {
       fields: [PostCommentTable.postId],
       references: [PostTable.id],
@@ -31,5 +30,7 @@ export const PostCommentRelationship = relations(
       fields: [PostCommentTable.userId],
       references: [UserTable.id],
     }),
+
+    likes: many(CommentLikeTable),
   })
 );

@@ -116,7 +116,7 @@ export function CreatePostForm() {
           >
             <IKUpload
               id="image-upload"
-              fileName="test-upload.png"
+              fileName="posts/test-upload.png"
               className="hidden"
               onSuccess={onImageUploadSuccess}
             />

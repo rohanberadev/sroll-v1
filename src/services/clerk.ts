@@ -1,6 +1,5 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { db } from "~/drizzle/db";
 import { UserRole, UserTable } from "~/drizzle/schema";
 import { CACHE_TAGS, dbCache, getIdTag } from "~/lib/cache";
@@ -10,9 +9,9 @@ const client = await clerkClient();
 export async function getCurrentUser({ allData = false }) {
   const { userId, sessionClaims, redirectToSignIn } = await auth();
 
-  if (userId != null && !sessionClaims?.dbId) {
-    redirect("/api/clerk/syncUsers");
-  }
+  // if (userId != null && !sessionClaims?.dbId) {
+  //   redirect("/api/clerk/syncUsers");
+  // }
 
   return {
     clerkUserId: userId,

@@ -11,6 +11,7 @@ export const CACHE_TAGS = {
   users: "users",
   postDrafts: "postDrafts",
   follows: "follows",
+  postComments: "postComments",
 } as const;
 
 export function getGlobalTag(tag: keyof typeof CACHE_TAGS) {

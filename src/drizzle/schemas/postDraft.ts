@@ -1,7 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import { pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { postVisibiltyEnum } from "../enums/posts";
 import { createdAt, id, updatedAt } from "../schemaHelper";
-import { postVisibiltyEnum } from "./post";
 import { UserTable } from "./user";
 
 export const PostDraftTable = pgTable("post_drafts", {
