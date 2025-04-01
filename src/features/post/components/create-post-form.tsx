@@ -3,7 +3,7 @@
 import { IKImage, IKUpload, ImageKitProvider } from "imagekitio-next";
 import { IKUploadResponse } from "imagekitio-next/dist/types/components/IKUpload/props";
 import { Trash2Icon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { IoAddSharp } from "react-icons/io5";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -28,14 +28,7 @@ export function CreatePostForm() {
   const [postDraftId, setPostDraftId] = useState<string>();
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const postDraft = localStorage.getItem("post_draft");
-    if (!postDraft) {
-      localStorage.setItem("post_draft", JSON.stringify({}));
-    }
-  }, []);
-
-  function onReset() {
+  async function onReset() {
     setCaptionValue("");
     setImages([]);
     setPostVisibilityValue("public");
@@ -177,6 +170,7 @@ export function CreatePostForm() {
               setSaving(true);
               await createPostFromDraft({ postDraftId });
               setSaving(false);
+              onReset();
             }
           }}
         >

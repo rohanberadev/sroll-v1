@@ -5,8 +5,8 @@ import { Tabs, TabsContent, TabsList } from "~/components/ui/tabs";
 import { getPublicPostsOfUser } from "~/features/post/actions/posts";
 import { PublicPostsGrid } from "~/features/post/components/post-grids";
 
-export default async function ProfileTabs({ userId }: { userId: string }) {
-  const { error, data } = await getPublicPostsOfUser({ userId });
+export default async function ProfileTabs() {
+  const { error, data } = await getPublicPostsOfUser();
 
   if (error || !data) {
     redirect("/error");

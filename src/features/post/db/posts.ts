@@ -101,6 +101,7 @@ function getPostInternal({ id, userId }: { id: string; userId: string }) {
         sql<boolean>`CASE WHEN ${PostLikeTable.id} IS NOT NULL THEN TRUE ELSE FALSE END`.as(
           "is_liked_by_user"
         ),
+      isPostedByUser: sql<boolean>`CASE WHEN ${PostTable.userId} = ${userId} THEN TRUE ELSE FALSE END`,
       user: {
         username: UserTable.username,
         imageUrl: UserTable.imageUrl,
@@ -194,6 +195,23 @@ export async function getPublicPostsofUser({ userId }: { userId: string }) {
   return cacheFn({ userId });
 }
 
+export async function getTopPosts({
+  userId,
+  pagination,
+}: {
+  userId: string;
+  pagination: { pageNumber: number; pageSize: number };
+}) {
+  const cacheFn = dbCache(getTopPostsInternal, {
+    tags: [
+      getGlobalTag(CACHE_TAGS.posts),
+      getUserTag(userId, CACHE_TAGS.posts),
+    ],
+  });
+
+  return cacheFn({ userId, pagination });
+}
+
 async function getAllowedPostsOfUserInternal({ userId }: { userId: string }) {
   return db
     .select()
@@ -240,6 +258,7 @@ function getPostsFeedInternal({
         sql<boolean>`CASE WHEN ${PostLikeTable.id} IS NOT NULL THEN TRUE ELSE FALSE END`.as(
           "is_liked_by_user"
         ),
+      isPostedByUser: sql<boolean>`CASE WHEN ${PostTable.userId} = ${userId} THEN TRUE ELSE FALSE END`,
       user: {
         username: UserTable.username,
         imageUrl: UserTable.imageUrl,
@@ -286,6 +305,50 @@ function getPostsFeedInternal({
       )
     )
     .orderBy(asc(PostTable.createdAt))
+    .limit(pagination.pageSize)
+    .offset((pagination.pageNumber - 1) * pagination.pageSize);
+}
+
+function getTopPostsInternal({
+  userId,
+  pagination,
+}: {
+  userId: string;
+  pagination: { pageNumber: number; pageSize: number };
+}) {
+  return db
+    .select({
+      ...getTableColumns(PostTable),
+      user: {
+        imageUrl: UserTable.imageUrl,
+      },
+    })
+    .from(PostTable)
+    .leftJoin(UserTable, and(eq(UserTable.id, PostTable.userId)))
+    .where(
+      and(
+        or(
+          eq(PostTable.visibilty, "public"),
+          not(eq(PostTable.visibilty, "private")),
+          and(
+            eq(PostTable.visibilty, "follower"),
+            exists(
+              db
+                .select()
+                .from(FollowTable)
+                .where(
+                  and(
+                    eq(FollowTable.followerUserId, userId),
+                    eq(FollowTable.followingUserId, PostTable.userId)
+                  )
+                )
+                .limit(1)
+            )
+          )
+        )
+      )
+    )
+    .orderBy(asc(PostTable.likeCount), asc(PostTable.shareCount))
     .limit(pagination.pageSize)
     .offset((pagination.pageNumber - 1) * pagination.pageSize);
 }

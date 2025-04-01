@@ -4,7 +4,8 @@ import { cache } from "react";
 export type ValidCacheTags =
   | ReturnType<typeof getGlobalTag>
   | ReturnType<typeof getUserTag>
-  | ReturnType<typeof getIdTag>;
+  | ReturnType<typeof getIdTag>
+  | ReturnType<typeof getPostTag>;
 
 export const CACHE_TAGS = {
   posts: "posts",
@@ -20,6 +21,10 @@ export function getGlobalTag(tag: keyof typeof CACHE_TAGS) {
 
 export function getUserTag(userId: string, tag: keyof typeof CACHE_TAGS) {
   return `user:${userId}-${CACHE_TAGS[tag]}` as const;
+}
+
+export function getPostTag(postId: string, tag: keyof typeof CACHE_TAGS) {
+  return `post:${postId}-${CACHE_TAGS[tag]}` as const;
 }
 
 export function getIdTag(id: string, tag: keyof typeof CACHE_TAGS) {

@@ -32,9 +32,9 @@ export function ShowPost({
             >
               {post.user?.username}
             </Link>
-            {!post.isFollowedByUser && (
+            {!(post.isFollowedByUser || post.isPostedByUser) ? (
               <FollowButton className="h-[22]" userId={post.userId} />
-            )}
+            ) : null}
           </CardTitle>
         </div>
         {/* <PostInfoButton

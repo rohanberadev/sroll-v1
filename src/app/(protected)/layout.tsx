@@ -26,7 +26,9 @@ export default async function ProtectedLayout({
       </main> */}
 
       <main className="flex w-full flex-col items-center lg:flex-1 lg:pl-[250px] xl:pl-[325px]">
-        <div className="px-12 py-16 w-full h-full">{children}</div>
+        <div className="px-12 py-16 w-full h-full flex justify-center items-center">
+          {children}
+        </div>
       </main>
 
       {/* Mobile Nav */}

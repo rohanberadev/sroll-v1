@@ -11,11 +11,14 @@ import { FaComment } from "react-icons/fa";
 import { GoHeartFill } from "react-icons/go";
 import { env } from "~/data/env/client";
 import { PostTable } from "~/drizzle/schema";
-import { getPublicPostsOfUser } from "../actions/posts";
-import { getPublicPostsofUser } from "../db/posts";
+import { getPublicPostsOfUser, getTopPosts } from "../actions/posts";
+import {
+  getPublicPostsofUser as getPublicPostsofUserDb,
+  getTopPosts as getTopPostsDb,
+} from "../db/posts";
 
-type PublicPosts = Awaited<ReturnType<typeof getPublicPostsofUser>>[number];
-// type AllowedPosts =
+type PublicPosts = Awaited<ReturnType<typeof getPublicPostsofUserDb>>[number];
+type TopPosts = Awaited<ReturnType<typeof getTopPostsDb>>[number];
 
 export function AllowedPostsGrid({
   userId,
@@ -29,7 +32,7 @@ export function AllowedPostsGrid({
 
   useEffect(() => {
     async function initPosts() {
-      const data = await getPublicPostsOfUser({ userId });
+      const data = await getPublicPostsOfUser();
     }
 
     if (!posts) {
@@ -47,11 +50,43 @@ export function AllowedPostsGrid({
   );
 }
 
+export function TopPostsGrid({ initialPosts }: { initialPosts?: TopPosts[] }) {
+  const [posts, setPosts] = useState(initialPosts);
+  const [loading, setLoading] = useState(false);
+  const [nextPage, setNextPage] = useState(1);
+
+  useEffect(() => {
+    async function initPosts() {
+      setLoading(false);
+      const { data, error, nextPageNumber } = await getTopPosts({
+        pagination: { pageNumber: 1, pageSize: 10 },
+      });
+      if (!error) {
+        setPosts(data);
+        setNextPage(nextPageNumber!);
+      }
+      setLoading(true);
+    }
+
+    if (!posts && !initialPosts) {
+      initPosts();
+    }
+  }, [posts, initialPosts]);
+
+  return (
+    <div className="grid w-full grid-cols-3">
+      {posts?.map((post) => (
+        <Link href={`/posts/${post.id}`} key={post.id}>
+          <PostGridBox post={post} />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export function PublicPostsGrid({
-  userId,
   initialPosts,
 }: {
-  userId: string;
   initialPosts?: PublicPosts[];
 }) {
   const [posts, setPosts] = useState(initialPosts);
@@ -60,7 +95,7 @@ export function PublicPostsGrid({
   useEffect(() => {
     async function initPosts() {
       setLoading(true);
-      const { data, error } = await getPublicPostsOfUser({ userId });
+      const { data, error } = await getPublicPostsOfUser();
       if (!error && data) {
         setPosts(data);
       }

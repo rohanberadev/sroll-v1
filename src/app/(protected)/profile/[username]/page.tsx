@@ -20,11 +20,7 @@ export default async function ProfilePage({
     <div className="h-full w-full lg:flex lg:items-center lg:justify-center lg:px-4 ">
       <div className="h-full w-full lg:flex lg:min-w-[650px] lg:max-w-[850px] lg:flex-col lg:items-center lg:justify-between lg:gap-y-2">
         <ProfileCard user={user} isProfileOwner={isProfileOwner} />
-        {isProfileOwner ? (
-          <ProfileTabs userId={user.id} />
-        ) : (
-          <PublicPostsGrid userId={user.id} />
-        )}
+        {isProfileOwner ? <ProfileTabs /> : <PublicPostsGrid />}
       </div>
     </div>
   );

@@ -1,14 +1,9 @@
 import { and, eq, getTableColumns, sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { db } from "~/drizzle/db";
 import { PostCommentTable, UserTable } from "~/drizzle/schema";
 import { CommentLikeTable } from "~/drizzle/schemas/commentLike";
-import {
-  CACHE_TAGS,
-  dbCache,
-  getGlobalTag,
-  getIdTag,
-  revalidateDbCache,
-} from "~/lib/cache";
+import { CACHE_TAGS, dbCache, getPostTag } from "~/lib/cache";
 
 export async function insertComment(
   data: typeof PostCommentTable.$inferInsert
@@ -20,10 +15,7 @@ export async function insertComment(
 
   if (!newComment) throw new Error("Failed to insert comment");
 
-  revalidateDbCache({
-    tag: CACHE_TAGS.postComments,
-    id: newComment.postId,
-  });
+  revalidateTag(getPostTag(newComment.postId, CACHE_TAGS.postComments));
 
   return newComment;
 }
@@ -36,10 +28,7 @@ export async function getComments({
   userId: string;
 }) {
   const cacheFn = dbCache(getCommentsInternal, {
-    tags: [
-      getGlobalTag(CACHE_TAGS.postComments),
-      getIdTag(postId, CACHE_TAGS.postComments),
-    ],
+    tags: [getPostTag(postId, CACHE_TAGS.postComments)],
   });
 
   return cacheFn({ postId, userId });

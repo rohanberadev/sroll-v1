@@ -1,21 +1,19 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { db } from "~/drizzle/db";
-import { UserTable } from "~/drizzle/schema";
+import { z } from "zod";
 import { getCurrentUser } from "~/services/clerk";
 import { deletePostDraft, upsertPostDraft } from "../db/postDrafts";
 import {
   getPost as getPostDb,
   getPublicPostsofUser as getPublicPostsofUserDb,
+  getTopPosts as getTopPostsDb,
   insertPost,
 } from "../db/posts";
 import { canAccessPost } from "../permissions/posts";
 
 export async function getPost(unsafeData: { id: string }) {
-  const { userId } = await auth();
+  const { userId } = await getCurrentUser({});
   if (!userId) redirect("/sign-in");
 
   if (!unsafeData || !unsafeData.id || typeof unsafeData.id !== "string") {
@@ -35,7 +33,7 @@ export async function getPost(unsafeData: { id: string }) {
     };
   }
 
-  const post = await getPostDb({ id });
+  const post = await getPostDb({ id, userId });
 
   if (!post) {
     return {
@@ -88,23 +86,42 @@ export async function createPostFromDraft(unsafeData: { postDraftId: string }) {
   }
 }
 
-export async function getPublicPostsOfUser({ userId }: { userId: string }) {
-  const { userId: currentUserId } = await getCurrentUser({});
-  if (!currentUserId) redirect("/sign-in");
-
-  const foundUser = await db.query.UserTable.findFirst({
-    where: eq(UserTable.id, userId),
-    columns: { id: true },
-  });
-
-  if (!foundUser) {
-    return {
-      error: true,
-      message: "User not found",
-    };
-  }
+export async function getPublicPostsOfUser() {
+  const { userId } = await getCurrentUser({});
+  if (!userId) redirect("/sign-in");
 
   const posts = await getPublicPostsofUserDb({ userId });
 
   return { error: false, data: posts };
+}
+
+export async function getTopPosts(unsafeData: {
+  pagination: { pageNumber: number; pageSize: number };
+}) {
+  const { userId } = await getCurrentUser({});
+  if (!userId) redirect("/sign-in");
+
+  const { success, data } = z
+    .object({
+      pagination: z.object({
+        pageNumber: z.number().default(1),
+        pageSize: z.number().default(10),
+      }),
+    })
+    .safeParse(unsafeData);
+
+  if (!success) {
+    return {
+      error: true,
+      message: "Failed to fetch posts",
+    };
+  }
+
+  const posts = await getTopPostsDb({ ...data, userId });
+
+  return {
+    error: false,
+    data: posts,
+    nextPageNumber: data.pagination.pageNumber + 1,
+  };
 }
