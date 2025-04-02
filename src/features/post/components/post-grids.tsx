@@ -11,7 +11,11 @@ import { FaComment } from "react-icons/fa";
 import { GoHeartFill } from "react-icons/go";
 import { env } from "~/data/env/client";
 import { PostTable } from "~/drizzle/schema";
-import { getPublicPostsOfUser, getTopPosts } from "../actions/posts";
+import {
+  getAllowedPostsOfUser,
+  getPublicPostsOfUser,
+  getTopPosts,
+} from "../actions/posts";
 import {
   getPublicPostsofUser as getPublicPostsofUserDb,
   getTopPosts as getTopPostsDb,
@@ -32,10 +36,16 @@ export function AllowedPostsGrid({
 
   useEffect(() => {
     async function initPosts() {
-      const data = await getPublicPostsOfUser();
+      setLoading(true);
+      const { data, error } = await getAllowedPostsOfUser({ id: userId });
+      if (!error && data) {
+        setPosts(data);
+      }
+      setLoading(false);
     }
 
     if (!posts) {
+      initPosts();
     }
   }, [posts, initialPosts]);
 
@@ -50,7 +60,13 @@ export function AllowedPostsGrid({
   );
 }
 
-export function TopPostsGrid({ initialPosts }: { initialPosts?: TopPosts[] }) {
+export function TopPostsGrid({
+  initialPosts,
+  nextPageNumber,
+}: {
+  initialPosts?: TopPosts[];
+  nextPageNumber?: number;
+}) {
   const [posts, setPosts] = useState(initialPosts);
   const [loading, setLoading] = useState(false);
   const [nextPage, setNextPage] = useState(1);

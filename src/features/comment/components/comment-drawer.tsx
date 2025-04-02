@@ -21,8 +21,8 @@ import { PostVisibilty } from "~/drizzle/schema";
 import { createComment, getComments } from "../actions/comments";
 import { getComments as getCommentsDb } from "../db/comments";
 import { CommentCard } from "./comment-card";
-// import { ClipLoader } from "react-spinners";
-// import CommentCard from "../card/CommentCard";
+
+type Comment = Awaited<ReturnType<typeof getCommentsDb>>[number];
 
 export function CommentDrawer({
   className,
@@ -37,29 +37,8 @@ export function CommentDrawer({
   postId: string;
   postVisibilty: PostVisibilty;
 }) {
-  type Comment = Awaited<ReturnType<typeof getCommentsDb>>[number];
-
   const [commentValue, setCommentValue] = useState("");
   const [commentCount, setCommentCount] = useState(initialCommentCount);
-  const [loadingComment, setLoadingComment] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
-
-  useEffect(() => {
-    async function initComments() {
-      setLoadingComment(true);
-      const { error, message, data } = await getComments({ postId });
-      if (!error) {
-        setComments(data!);
-      } else {
-        console.error(message);
-      }
-      setLoadingComment(false);
-    }
-
-    if (comments.length === 0) {
-      initComments();
-    }
-  }, [postId]);
 
   return (
     <Drawer>
@@ -76,21 +55,7 @@ export function CommentDrawer({
           </DrawerDescription>
         </DrawerHeader>
         <div className="w-full overflow-y-auto p-8">
-          <div className="flex h-full w-full flex-col gap-y-8">
-            {loadingComment ? (
-              <p>Loading...</p>
-            ) : comments?.length === 0 ? (
-              <div className="flex h-full w-full items-center justify-center bg-gray-950 p-4">
-                <p className="text-2xl text-gray-600">
-                  No comments in this post.
-                </p>
-              </div>
-            ) : (
-              comments.map((comment) => (
-                <CommentCard key={comment.id} comment={comment} />
-              ))
-            )}
-          </div>
+          <Comments postId={postId} />
         </div>
         <DrawerFooter className="flex flex-row">
           <Input
@@ -102,7 +67,10 @@ export function CommentDrawer({
           <Button
             className="flex h-16 w-16 items-center justify-center bg-blue-600"
             onClick={async () => {
-              await createComment({ comment: commentValue, postId: postId });
+              const { error, data } = await createComment({
+                comment: commentValue,
+                postId: postId,
+              });
               setCommentValue("");
             }}
             // disabled={}
@@ -117,5 +85,43 @@ export function CommentDrawer({
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+function Comments({ postId }: { postId: string }) {
+  const [loadingComment, setLoadingComment] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+
+  useEffect(() => {
+    async function initComments() {
+      setLoadingComment(true);
+      const { error, message, data } = await getComments({ postId });
+      if (!error) {
+        setComments(data!);
+      } else {
+        console.error(message);
+      }
+      setLoadingComment(false);
+    }
+
+    if (comments.length === 0 && postId) {
+      initComments();
+    }
+  }, []);
+
+  return (
+    <div className="flex h-full w-full flex-col gap-y-8">
+      {loadingComment ? (
+        <p>Loading...</p>
+      ) : comments?.length === 0 ? (
+        <div className="flex h-full w-full items-center justify-center bg-gray-950 p-4">
+          <p className="text-2xl text-gray-600">No comments in this post.</p>
+        </div>
+      ) : (
+        comments.map((comment) => (
+          <CommentCard key={comment.id} comment={comment} />
+        ))
+      )}
+    </div>
   );
 }

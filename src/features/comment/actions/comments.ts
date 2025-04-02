@@ -39,7 +39,7 @@ export async function createComment(
 
   try {
     const comment = await insertComment({ ...data, userId });
-    return comment;
+    return { error: false, data: comment };
   } catch (error) {
     await updatePostOnDeleteComment({ id: data.postId });
 

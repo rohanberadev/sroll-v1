@@ -5,6 +5,7 @@ import { UserTable } from "~/drizzle/schema";
 import { FollowButton } from "~/features/follow/components/follow-button";
 import { UserAvatar } from "~/features/user/components/user-avatar";
 import { cn } from "~/lib/utils";
+import { ProfileInfoDialog } from "./profile-info-dropdown";
 
 export function ProfileCard({
   user,
@@ -62,12 +63,12 @@ export function ProfileCard({
         />
       </div>
 
-      {/* {isProfileOwner && (
-        <ProfileInfoButton
-          username={username}
+      {isProfileOwner && (
+        <ProfileInfoDialog
+          username={user.username}
           triggerClassName="absolute top-3 right-4 md:top-4 md:right-4"
         />
-      )} */}
+      )}
     </div>
   );
 }

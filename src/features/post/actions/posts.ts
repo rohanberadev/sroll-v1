@@ -1,11 +1,15 @@
 "use server";
 
+import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { db } from "~/drizzle/db";
+import { FollowTable } from "~/drizzle/schema";
 import { getCurrentUser } from "~/services/clerk";
 import { deletePostDraft, upsertPostDraft } from "../db/postDrafts";
 import {
   getPost as getPostDb,
+  getPublicAndFollowerPostsOfUser,
   getPublicPostsofUser as getPublicPostsofUserDb,
   getTopPosts as getTopPostsDb,
   insertPost,
@@ -124,4 +128,38 @@ export async function getTopPosts(unsafeData: {
     data: posts,
     nextPageNumber: data.pagination.pageNumber + 1,
   };
+}
+
+export async function getAllowedPostsOfUser(unsafeData: { id: string }) {
+  const { userId } = await getCurrentUser({});
+  if (!userId) redirect("/sign-in");
+
+  const { data, success } = z
+    .object({ id: z.string().min(1).uuid() })
+    .safeParse(unsafeData);
+
+  if (!success) {
+    return {
+      error: true,
+      message: "Failed to fetch posts",
+    };
+  }
+
+  const isFollower = await db.query.FollowTable.findFirst({
+    where: and(
+      eq(FollowTable.followerUserId, userId),
+      eq(FollowTable.followingUserId, data.id)
+    ),
+    columns: {
+      id: true,
+    },
+  });
+
+  if (isFollower) {
+    const posts = await getPublicAndFollowerPostsOfUser({ userId: data.id });
+    return { error: false, data: posts };
+  } else {
+    const posts = await getPublicPostsofUserDb({ userId: data.id });
+    return { error: false, data: posts };
+  }
 }

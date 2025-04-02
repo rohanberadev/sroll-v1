@@ -11,7 +11,7 @@ export async function insertComment(
   const [newComment] = await db
     .insert(PostCommentTable)
     .values(data)
-    .returning({ id: PostCommentTable.id, postId: PostCommentTable.postId });
+    .returning();
 
   if (!newComment) throw new Error("Failed to insert comment");
 

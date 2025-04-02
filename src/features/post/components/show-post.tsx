@@ -12,6 +12,7 @@ import { UserAvatar } from "~/features/user/components/user-avatar";
 import { getPostsFeed } from "../db/posts";
 import { LikeButton } from "./like-button";
 import { PostCarousel } from "./post-carousel";
+import { SaveButton } from "./save-button";
 
 export function ShowPost({
   post,
@@ -65,7 +66,7 @@ export function ShowPost({
             />
             {/* <ShareButton className="h-5 w-5" shareCount={post.shares} /> */}
           </div>
-          {/* <SaveButton isSavedByUser={post.isSavedByUser} postId={post.id} /> */}
+          <SaveButton isSavedByUser={post.isSavedByUser} postId={post.id} />
         </div>
 
         <div className="flex w-full justify-start">
@@ -76,8 +77,9 @@ export function ShowPost({
         </div>
 
         <div className="flex w-full flex-col justify-start text-sm">
-          <p>{post.caption}</p>
-          <span>Viewed by {post.viewCount}</span>
+          <p>Post Caption - {post.caption}</p>
+          <span>Uploaded at {new Date(post.createdAt).toDateString()}</span>
+          <span>Edited at {new Date(post.updatedAt).toDateString()}</span>
         </div>
       </CardFooter>
     </Card>

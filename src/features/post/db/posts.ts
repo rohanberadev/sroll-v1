@@ -1,6 +1,7 @@
 import {
   and,
   asc,
+  desc,
   eq,
   exists,
   getTableColumns,
@@ -12,6 +13,7 @@ import { db } from "~/drizzle/db";
 import {
   FollowTable,
   PostLikeTable,
+  PostSaveTable,
   PostTable,
   UserTable,
 } from "~/drizzle/schema";
@@ -102,6 +104,7 @@ function getPostInternal({ id, userId }: { id: string; userId: string }) {
           "is_liked_by_user"
         ),
       isPostedByUser: sql<boolean>`CASE WHEN ${PostTable.userId} = ${userId} THEN TRUE ELSE FALSE END`,
+      isSavedByUser: sql<boolean>`CASE WHEN ${PostSaveTable.id} IS NOT NULL THEN TRUE ELSE FALSE END`,
       user: {
         username: UserTable.username,
         imageUrl: UserTable.imageUrl,
@@ -123,6 +126,13 @@ function getPostInternal({ id, userId }: { id: string; userId: string }) {
       )
     )
     .leftJoin(UserTable, and(eq(UserTable.id, PostTable.userId)))
+    .leftJoin(
+      PostSaveTable,
+      and(
+        eq(PostSaveTable.userId, userId),
+        eq(PostSaveTable.postId, PostTable.id)
+      )
+    )
     .where(eq(PostTable.id, id))
     .orderBy(asc(PostTable.createdAt))
     .limit(1);
@@ -212,7 +222,26 @@ export async function getTopPosts({
   return cacheFn({ userId, pagination });
 }
 
-async function getAllowedPostsOfUserInternal({ userId }: { userId: string }) {
+export async function getPublicAndFollowerPostsOfUser({
+  userId,
+}: {
+  userId: string;
+}) {
+  const cacheFn = dbCache(getPublicAndFollowerPostsOfUserInternal, {
+    tags: [
+      getGlobalTag(CACHE_TAGS.posts),
+      getUserTag(userId, CACHE_TAGS.posts),
+    ],
+  });
+
+  return cacheFn({ userId });
+}
+
+function getPublicAndFollowerPostsOfUserInternal({
+  userId,
+}: {
+  userId: string;
+}) {
   return db
     .select()
     .from(PostTable)
@@ -259,6 +288,7 @@ function getPostsFeedInternal({
           "is_liked_by_user"
         ),
       isPostedByUser: sql<boolean>`CASE WHEN ${PostTable.userId} = ${userId} THEN TRUE ELSE FALSE END`,
+      isSavedByUser: sql<boolean>`CASE WHEN ${PostSaveTable.id} IS NOT NULL THEN TRUE ELSE FALSE END`,
       user: {
         username: UserTable.username,
         imageUrl: UserTable.imageUrl,
@@ -280,6 +310,13 @@ function getPostsFeedInternal({
       )
     )
     .leftJoin(UserTable, and(eq(UserTable.id, PostTable.userId)))
+    .leftJoin(
+      PostSaveTable,
+      and(
+        eq(PostSaveTable.userId, userId),
+        eq(PostSaveTable.postId, PostTable.id)
+      )
+    )
     .where(
       and(
         or(
@@ -348,7 +385,11 @@ function getTopPostsInternal({
         )
       )
     )
-    .orderBy(asc(PostTable.likeCount), asc(PostTable.shareCount))
+    .orderBy(
+      desc(PostTable.likeCount),
+      desc(PostTable.shareCount),
+      desc(PostTable.commentCount)
+    )
     .limit(pagination.pageSize)
     .offset((pagination.pageNumber - 1) * pagination.pageSize);
 }

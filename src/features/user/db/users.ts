@@ -79,3 +79,5 @@ export async function updateUserOnUnfollow({
   revalidateDbCache({ tag: CACHE_TAGS.users, id: followerUserId });
   revalidateDbCache({ tag: CACHE_TAGS.users, id: followingUserId });
 }
+
+function getUserProfiles({ id }: { id: string }) {}
